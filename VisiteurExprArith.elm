@@ -1,4 +1,4 @@
-module VisitFin2 exposing(..)
+module VisiteurExprArith exposing(..)
 
 type Bin = Plus 
              | Moins 
