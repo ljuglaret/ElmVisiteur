@@ -99,18 +99,4 @@ expr2  = ((cosinus (Inconnue X ))<^>(Const 2)) <+> ((sinus (Inconnue Y))<^>(Cons
 r2 : Float
 r2 = calcul (evalFold [(X,2), (Y,2)] expr2)
 
-{-
-m a      -> ( a -> b) -> m b 
 
-andThenExpr ma fab =
-        case ma of =
-                OpeBin { bin, exprg , exprd } -> OpeBin {bin = bin, exprg = eval (var , val) exprg ,exprd = eval (var, val) exprd }
-                Const a -> Const a 
-                Inconnue xy-> if (xy == var) then Const val
-                        else Inconnue xy
-                OpeTrigo  { trigo , expr } ->OpeTrigo {trigo = trigo, expr = eval (var,val) expr}
-
-OpeBin { bin, exprg , exprd } -> andThenExpr OpeBin { bin, exprg , exprd } ()
-
-
--}
