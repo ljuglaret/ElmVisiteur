@@ -1,72 +1,104 @@
 module Visiteur19 exposing(..)
 
+type Bin = Plus 
+             | Moins 
+             | Fois 
+             | Div      
+             | Puiss    
+ 
 
-type Expr = Plus       Expr Expr
-            | Moins    Expr Expr
-            | Fois     Expr Expr
-            | Div      Expr Expr 
-            | Const    Float
-            | Puiss    Expr Expr
-            | Inconnue Var
-            | Cos      Expr 
-            | Sin      Expr
-            | Tan      Expr
+type Trigo =  Cos       
+            | Sin      
+            | Tan      
 
+
+
+type Expr a = OpeBin   { bin  : Bin , exprg : Expr a, exprd : Expr a}
+            | Const     Float
+            | Inconnue  a
+            | OpeTrigo  { trigo : Trigo, expr : Expr a} 
 
 type Var = X  
             | Y  
             | Z
 
 
--- foldl :  (a          ->   b  -> b     )    -> b     -> List a           -> b
--- foldl : ((Var,Float) -> Expr -> Expr  )    -> Expr  -> List (Var, Float) -> Expr
+plus :  Expr a ->  Expr a -> Expr a
+plus g d = OpeBin   { bin  = Plus , exprg = g  , exprd = d }
+ 
+moins :  Expr a ->  Expr a -> Expr a
+moins  g d = OpeBin   { bin  = Moins , exprg = g  , exprd = d }
+ 
 
-evalFold  : List (Var, Float)  -> Expr ->   Expr
+fois :  Expr a ->  Expr a -> Expr a
+fois g d = OpeBin   { bin  = Fois , exprg = g  , exprd = d }
+ 
+div :  Expr a ->  Expr a -> Expr a
+div g d = OpeBin   { bin  = Div , exprg = g  , exprd = d }
+
+
+puiss :  Expr a ->  Expr a -> Expr a
+puiss g d = OpeBin   { bin  = Puiss , exprg = g  , exprd = d }
+  
+cosinus :   Expr a -> Expr a
+cosinus g = OpeTrigo   { trigo  = Cos , expr = g  }
+
+sinus :   Expr a -> Expr a
+sinus g = OpeTrigo   { trigo  = Sin , expr = g  }
+
+
+tangente :   Expr a -> Expr a
+tangente g = OpeTrigo   { trigo  = Tan , expr = g  }
+
+
+
+evalFold  : List (a, Float)  -> Expr a ->   Expr a
 evalFold liste expr0 = 
         let
-                eval : (Var,Float) -> Expr -> Expr 
-                eval (var,val) expr= 
-                        case expr of 
-                                Plus  a b  -> Plus (eval (var,val) a )  (eval   (var,val) b)
-                                Moins a b ->  Moins (eval  (var,val) a )  (eval   (var,val) b)
-                                Fois a b  ->  Fois (eval  (var,val) a )  (eval   (var,val) b)
-                                Puiss a b -> Puiss (eval  (var,val) a )  (eval  (var,val) b)
-                                Div a b  ->  Div (eval  (var,val) a )  (eval   (var,val) b)
-                                Const a -> Const a
+                eval : (a,Float) -> Expr a -> Expr a
+                eval (var,val) exprE = 
+                        case exprE of 
+                                Const a -> Const a 
                                 Inconnue xy-> if (xy == var) then Const val
                                         else Inconnue xy
-                                Cos a ->  Cos (eval (var, val) a)
-                                Sin a ->Sin (eval (var, val) a)
-                                Tan a -> Tan (eval (var, val) a)
-        in
-                List.foldl  eval expr0 liste
+                                OpeBin { bin,exprg,exprd}-> OpeBin{bin = bin, exprg = eval (var , val) exprg ,exprd = eval (var, val) exprd }
+                                OpeTrigo  { trigo , expr } ->OpeTrigo {trigo = trigo, expr = eval (var,val) expr}
+        in List.foldl  eval expr0 liste
 
 
-estDivPar : Float -> Float -> Result String Float 
-estDivPar x y   = 
-        if (y /= 0) then Ok (x/y) 
-        else Err "pas div"
 
-calcul :  Expr ->    Float
-calcul   expr =
-        case expr of 
-                Plus  a b   ->   ((calcul a ) + (calcul b))
-                Moins a b   ->   (  (calcul a) - (calcul b))
-                Fois a b    ->   (   (calcul a) * (calcul b))
-                Puiss a b   ->   ( (calcul a)  ^ (calcul b))
-                Const a     ->   a 
-                Inconnue xy ->   0
-                Div a b     ->  (calcul a ) / (calcul b)
-                Cos a       ->   cos (calcul a)
-                Sin a       ->   sin (calcul a)
-                Tan a       ->   tan (calcul a)
 
-resultat : List(Var,Float)-> Expr -> Float
-resultat  l expr = calcul (evalFold l expr)
+calcul :  Expr a ->    Float
+calcul   expr0 =
+        case expr0 of 
+                Const a -> a
+                Inconnue xy-> 0
+                OpeBin { bin,exprg,exprd}  -> 
+                        case bin of 
+                                Plus -> ( calcul exprg ) + ( calcul exprd)
+                                Moins -> ( calcul exprg ) - ( calcul exprd)
+                                Fois -> ( calcul exprg ) * ( calcul exprd)
+                                Div -> ( calcul exprg ) / ( calcul exprd)
+                                Puiss -> ( calcul exprg ) ^ ( calcul exprd)
+                OpeTrigo  { trigo , expr } ->
+                        case trigo of
+                                Cos -> cos (calcul expr )
+                                Sin -> sin (calcul expr)
+                                Tan -> tan (calcul expr)
+
+
+
+
+--(3 + x ) * (x - y)
+exprtest : Expr Var 
+exprtest =  ((Const 3) |> plus (Inconnue X)) |> fois ((Inconnue X) |> moins ( Inconnue Y))
+
+r :Float
+r = calcul (evalFold [(X,2),(Y, -3)] exprtest)
 
 -- (Cos X)^2 + (Sin Y)^2
+expr2 : Expr Var
+expr2  = (puiss (cosinus (Inconnue X )) (Const 2)) |> plus (puiss (sinus (Inconnue Y))(Const 2))
 
-expr2 : Expr
-expr2  = Plus (Puiss (Cos ((Inconnue X )))(Const 2)) (Puiss(Sin ((Inconnue Y)))(Const 2))
 r2 : Float
-r2 = resultat [(X,2), (Y,2)] expr2
+r2 = calcul (evalFold [(X,2), (Y,2)] expr2)
