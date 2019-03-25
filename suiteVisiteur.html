@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+<title align="center"> Pattern Visiteur Elm/java</title>
+
+ <body><textarea theme="Journal">
+ 
+Un exemple immediat et pratique du pattern visiteur en java est la"fabrication" du type Maybe .   
+Cela permet par exemple d effectuer une addition entre deux chaines de caracteres sans devoir generer d erreurs.   
+
+##Fichier 1 : Entier##   
+```java   
+public interface Entier
+{
+   void visit (Maybe maybe);
+
+}
+```
+
+##Fichier 2 : Maybe##   
+```java
+public interface Maybe
+{
+        
+void accept (Entier entier);
+}
+```   
+##Fichier 3 : Just##   
+
+
+```java
+public class Just implements Maybe{
+    private int valeur;
+    public void accept (Entier entier){
+        entier.visit(this);
+    }
+    int getValeur (){
+        return this.valeur;
+    }
+    
+    
+    Just (int valeur){
+        this.valeur = valeur;
+    }
+}
+```
+
+##Fichier 4 : Nothing ##
+```java
+public class Nothing implements Maybe{
+    public void accept (Entier entier){
+        entier.visit(this);
+    }
+}
+```
+
+</textarea>
+        <script type="text/javascript" src="//lbesson.bitbucket.io/md/strapdown.min.js"></script>
+    </body>
+</html>
